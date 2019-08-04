@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Distance to Earth Center</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        //https://gis.stackexchange.com/questions/242188/calculating-the-earth-radius-at-latitude
+        let WGS_ELLIPSOID = { a: 6378137.0, b: 6356752.314 }; // meter
+        function getRadiusAtLatitude(lat) {
+            lat  = lat * (Math.PI / 180);
+            let f1 = Math.pow((Math.pow(WGS_ELLIPSOID.a, 2) * Math.cos(lat)), 2);
+            let f2 = Math.pow((Math.pow(WGS_ELLIPSOID.b, 2) * Math.sin(lat)), 2);
+            let f3 = Math.pow((WGS_ELLIPSOID.a * Math.cos(lat)), 2);
+            let f4 = Math.pow((WGS_ELLIPSOID.b * Math.sin(lat)), 2);
+            return Math.sqrt((f1 + f2) / (f3 + f4));
+        }
+
+        let elevator;
+        function initMap() {
+            elevator = new google.maps.ElevationService;
+        }
+
+        function displayLocationElevation(lat, lon) {
+            // Initiate the location request
+            elevator.getElevationForLocations({
+                'locations': [{lat: lat, lng: lon}]
+            }, function(results, status) {
+                if (status === 'OK') {
+                    // Retrieve the first result
+                    if (results[0]) {
+                        $('#distance').html((getRadiusAtLatitude(lat) + parseFloat(results[0].elevation)));
+                    } else {
+                        //
+                    }
+                } else {
+                    //
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            $('#findButton').on('click', function(){
+                let notification = $('#notification');
+                notification.html('');
+
+                let latitude = parseFloat($('#latitude').val().trim());
+                let longitude = parseFloat($('#longitude').val().trim());
+
+                if(isNaN(latitude)) {
+                    notification.html('Please enter a number as latitude');
+                }
+                else if(isNaN(longitude)) {
+                    notification.html('Please enter a number as longitude');
+                }
+                else if(latitude < -90 || latitude > 90) {
+                    notification.html('Invalid latitude');
+                }
+                else if(longitude < -180 || longitude > 180) {
+                    notification.html('Invalid longitude');
+                }
+                else {
+                    displayLocationElevation(latitude, longitude);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">STHW3</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="latlon.html">City Finder</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="nearest.html">Nearest City</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link " href="earth.html">Earth Center<span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container container-fluid">
+    <div class="row">
+        <div class="col-xl-12">
+            <form>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="text" class="form-control" id="latitude" aria-describedby="latHelp" placeholder="Enter latitude">
+                            <small id="latHelp" class="form-text text-muted">Enter latitude of your address.</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="text" class="form-control" id="longitude" aria-describedby="lonHelp" placeholder="Enter latitude">
+                            <small id="lonHelp" class="form-text text-muted">Enter longitude of your address.</small>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="row">
+                <div class="col">
+                    <button id="findButton" class="btn btn-primary">Find Distance</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p id="notification" class="text-danger"></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p id="distance"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=API_KEY_HERE&callback=initMap"></script>
+</body>
+</html>

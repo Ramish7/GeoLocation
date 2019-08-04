@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Find Coordinates</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <style type="text/css">
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 600px;
+        }
+    </style>
+    <script type="text/javascript">
+        let map, geocoder, infowindow;
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 39.925533, lng: 32.866287}
+            });
+            geocoder = new google.maps.Geocoder;
+            infowindow = new google.maps.InfoWindow;
+        }
+
+        function geocodeLatLng(lat, lon) {
+            var latlng = {lat: lat, lng: lon};
+            geocoder.geocode({'location': latlng}, function(results, status) {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        var marker = new google.maps.Marker({
+                            position: latlng,
+                            map: map
+                        });
+
+                        if (results.length > 1) {
+                            $('#city').html(results[results.length - 2].formatted_address);
+                        }
+                        else {
+                            $('#city').html('You are not in a city. You might be sailing.');
+                        }
+
+                        infowindow.setContent(results[0].formatted_address);
+                        infowindow.open(map, marker);
+                    } else {
+                        window.alert('No results found');
+                    }
+                } else {
+                    window.alert('Geocoder failed due to: ' + status);
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            $('#findButton').on('click', function(){
+                let notification = $('#notification');
+                notification.html('');
+
+                let latitude = $('#latitude').val().trim();
+                let longitude = $('#longitude').val().trim();
+                if(latitude === '') {
+                    notification.html('Please enter latitude');
+                }
+                else if(longitude === '') {
+                    notification.html('Please enter longitude');
+                }
+                else {
+                    latitude = parseFloat(latitude);
+                    longitude = parseFloat(longitude);
+
+                    if(isNaN(latitude)) {
+                        notification.html('Latitude should be a floating number');
+                    }
+                    else if(isNaN(longitude)) {
+                        notification.html('Longitude should be a floating number');
+                    }
+                    else if(latitude < -90 || latitude > 90) {
+                        notification.html('Invalid latitude');
+                    }
+                    else if(longitude < -180 || longitude > 180) {
+                        notification.html('Invalid longitude');
+                    }
+                    else {
+                        geocodeLatLng(latitude, longitude);
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">STHW3</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="latlon.html">City Finder<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="nearest.html">Nearest City</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link " href="earth.html">Earth Center</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container container-fluid">
+    <div class="row">
+        <div class="col-xl-12">
+            <form>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="text" class="form-control" id="latitude" aria-describedby="latHelp" placeholder="Enter latitude">
+                            <small id="latHelp" class="form-text text-muted">Enter latitude of your address.</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="text" class="form-control" id="longitude" aria-describedby="lonHelp" placeholder="Enter latitude">
+                            <small id="lonHelp" class="form-text text-muted">Enter longitude of your address.</small>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="row">
+                <div class="col">
+                    <button id="findButton" class="btn btn-primary">Find Coordinates</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p id="notification" class="text-danger"></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p id="city"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-12">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=API_KEY_HERE&callback=initMap">
+</script>
+</body>
+</html>
